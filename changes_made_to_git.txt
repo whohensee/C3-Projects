@@ -1,0 +1,4 @@
+to suppress the following message: "warning: LF will be replaced by CRLF in data.csv."
+	i used the following command: git config core.autocrlf true
+	based on the URL https://stackoverflow.com/questions/5834014/lf-will-be-replaced-by-crlf-in-git-what-is-that-and-is-it-important
+	...actually didnt work, so instead I used : git config --global core.safecrlf false
