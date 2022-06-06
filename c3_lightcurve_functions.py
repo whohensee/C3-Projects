@@ -14,16 +14,16 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from math import log10, floor
-from sympy import *
+# from sympy import *
 from scipy.special import factorial
 import glob
 import math
 import pandas as pd
 
 
-#####
+# ####
 # Functions
-#####
+# ####
 
 def form_transient_names(filename):
     name = filename
@@ -46,11 +46,12 @@ def analyze_lightcurve(filename, plot=False):
     fadetime: time from peak to halfway falling
     """
     name_PTF, name_iPTF = form_transient_names(filename)
+    sn_name = filename[12:-7]
 
     data = np.genfromtxt(filename, skip_header=1, skip_footer=1,usecols=(0,2,3))
 
     if np.size(data) < 5:
-        return -1, -1
+        return -1, -1, -1
     
     # plt.figure(dpi=150)
 
@@ -78,8 +79,15 @@ def analyze_lightcurve(filename, plot=False):
             good_xvals = np.append(good_xvals, xval)
     # print(good_xvals)         # for testing
 
-    half_rising_JD = np.average(good_xvals[np.argwhere(good_xvals<x[max_index])])
-    half_falling_JD = np.average(good_xvals[np.argwhere(good_xvals>x[max_index])])
+    
+    if any(good_xvals[np.argwhere(good_xvals<x[max_index])]):
+        half_rising_JD = np.average(good_xvals[np.argwhere(good_xvals<x[max_index])])
+    else:
+        half_rising_JD = -2
+    if any(good_xvals[np.argwhere(good_xvals>x[max_index])]):
+        half_falling_JD = np.average(good_xvals[np.argwhere(good_xvals>x[max_index])])
+    else:
+        half_falling_JD = -3
 
     risetime = float(x[max_index]) - half_rising_JD
     falltime = half_falling_JD - float(x[max_index])
@@ -100,15 +108,15 @@ def analyze_lightcurve(filename, plot=False):
         plt.axhline(half_brightness, color="g")
 
         #plot the interpolated points
-        plt.errorbar(interp_xvals, interp_yvals, color="r")
+        plt.errorbar(interp_xvals, interp_yvals, color="r", linewidth=0.5)
 
         #label the graph
-        titletext = f"Lightcurve for transient {name_PTF}"
+        titletext = f"Lightcurve for transient {sn_name}"
         plt.title(titletext)
         plt.xlabel("Elapsed Time (days)")
         plt.ylabel("Magnitude")
         textstr = f'risetime: {risetime} \n falltime: {falltime}'
         ax.text(0.5, 0.1, textstr, ha='center', transform=ax.transAxes)
 
-    return risetime, falltime
+    return risetime, falltime, peak_magnitude
 
